@@ -1,58 +1,90 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define Stack_Capasity 10000
-
 class Stack {
 private:
-	double data [Stack_Capasity];
-	int size;
+	double * data_;
+	size_t size_;
+	size_t capacity_;
 public:
 	void Push (double value);
 	double Pop ();
-	void Empty ();
+	bool Empty ();
+	void Clear();
 	int Size ();
 	int Capacity ();
-	Size_Const () {
-		size = 0;
-	};
+	bool Ok();
+	void Dump ();
+	Stack(size_t size);
 };
 
+Stack::Stack (size_t size) :
+	data_ (new double [size]),
+	capacity_ (size),
+	size_ (0)
+	{}
+
 void Stack::Push (double value) {
-	data[size++] = value;
+	data_[size_++] = value;
 };
 
 double Stack::Pop () {
-	double a = data[--size];
+	double a = data_[--size_];
 	return a;
 }
 
-void Stack::Empty () {
-	while (size) {
-		data[size--] = 0;
+bool Stack::Empty () {
+	return (bool)(!size_);
+} 
+
+void Stack::Clear () {
+	if (!Empty()) {
+		while (size_) {
+			data_[--size_] = 0;
+		}
 	}
 }
 
 int Stack::Size () {
-	return size;
+	return size_;
 }
 
 int Stack::Capacity () {
-	return (int)(sizeof(data)/8);
+	return capacity_;
 }
 
-Stack::Stack (size_t size) :
+bool Stack::Ok () {
+	return (((data_&&capacity_&&size_<capacity_)||(!data_&&!capacity_&&!size_))&&this);
+}
 
-int main(int argc, char **argv)
+void Stack::Dump () {
+	if (Ok()) {
+		if (data_) {
+			if (size_) {
+				printf("Capacity: %d \n", capacity_);
+				printf("Size: %d \n", size_);
+				printf("Stack data: \n");
+				while (size_--) {
+					printf("	%g \n", data_[size_]);
+				}
+			} else {
+				printf("Empty stack");
+			}
+		} else {
+			printf("No data");
+		}
+	} else {
+		printf("Error");
+	}
+}
+
+int main()
 {
-	Stack s;
+	Stack s(1000);
 	s.Push (1);
 	s.Push (2);
-	s.Push (3234);
-	printf("%g    ", s.Pop());
-	printf("%d   ", s.Size());
-	s.Empty();
-	printf("%d     ", s.Size());
-	printf("%d", s.Capacity());
+	s.Push (323);
+	s.Clear();
+	s.Dump();
 	return 0;
 }
