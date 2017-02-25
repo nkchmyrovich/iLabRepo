@@ -25,32 +25,64 @@ Stack::Stack (size_t size) :
 	{}
 
 void Stack::Push (double value) {
-	data_[size_++] = value;
-};
+	if (Ok()) {
+		if (value) {
+			data_[size_++] = value;
+		} else {
+			printf("Wrong value\n");
+		}
+	} else {
+		Dump();
+	}
+}
 
 double Stack::Pop () {
-	double a = data_[--size_];
-	return a;
+	if (Ok()) {
+		if (size_) {
+			double a = data_[--size_];
+			return a;
+		} else {
+			printf("Nothing to pop\n");
+		}
+	} else {
+		Dump();
+	}
 }
 
 bool Stack::Empty () {
-	return (bool)(!size_);
+	if (Ok()) {
+		return !size_;
+	} else {
+		Dump();
+	}
 } 
 
 void Stack::Clear () {
-	if (!Empty()) {
-		while (size_) {
-			data_[--size_] = 0;
+	if (Ok()) {
+		if (!Empty()) {
+			while (size_) {
+				data_[--size_] = 0;
+			}
 		}
+	} else {
+		Dump();
 	}
 }
 
 int Stack::Size () {
-	return size_;
+	if (Ok()) {
+		return size_;
+	} else {
+		Dump();
+	}
 }
 
 int Stack::Capacity () {
-	return capacity_;
+	if (Ok()) {
+		return capacity_;
+	} else {
+		Dump();
+	}
 }
 
 bool Stack::Ok () {
@@ -61,20 +93,21 @@ void Stack::Dump () {
 	if (Ok()) {
 		if (data_) {
 			if (size_) {
+				size_t i = size_;
 				printf("Capacity: %d \n", capacity_);
 				printf("Size: %d \n", size_);
 				printf("Stack data: \n");
-				while (size_--) {
-					printf("	%g \n", data_[size_]);
+				while (i--) {
+					printf("	%g \n", data_[i]);
 				}
 			} else {
-				printf("Empty stack");
+				printf("Empty stack\n");
 			}
 		} else {
-			printf("No data");
+			printf("No data\n");
 		}
 	} else {
-		printf("Error");
+		printf("Error\n");
 	}
 }
 
@@ -83,8 +116,11 @@ int main()
 	Stack s(1000);
 	s.Push (1);
 	s.Push (2);
-	s.Push (323);
-	s.Clear();
+	s.Push (123);
+	s.Pop();
+	s.Pop();
+	s.Pop();
+	s.Pop();
 	s.Dump();
 	return 0;
 }
