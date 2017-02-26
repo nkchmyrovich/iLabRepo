@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+const size_t CONST_ERR_1 = 1;
+const size_t CONST_ERR_2 = 2;
+const size_t CONST_ERR_3 = 3;
+const size_t CONST_ERR_4 = 4;
+const size_t CONST_ERR_5 = 5; 
+
 class Stack {
 private:
 	double * data_;
 	size_t size_;
 	size_t capacity_;
+	size_t last_error_;
 public:
 	void Push (double value);
 	double Pop();
@@ -16,73 +23,71 @@ public:
 	bool Ok();
 	void Dump();
 	void PrintError();
-	size_t CheckErrors();
-	size_t last_error_;
 	Stack(size_t size);
+	size_t CheckErrors();
 };
 
 Stack::Stack (size_t size) :
 	data_ (new double [size]),
 	capacity_ (size),
 	size_ (0),
-	last_error_ (0)
+	last_error_ (0),
 	{}
 
 void Stack::Push (double value) {
-	if (Ok()) {
-		data_[size_++] = value;
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return;
 	}
+	data_[size_++] = value;
 }
 
 double Stack::Pop () {
-	if (Ok()) {
-		if (size_) {
-			double a = data_[--size_];
-			return a;
-		} else {
-			printf("Nothing to pop\n");
-		}
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return 0;
 	}
+	if (!size_) {
+		printf("Nothing to pop\n");
+		return 0;
+	}
+	return data_[--size_];
 }
 
 bool Stack::Empty () {
-	if (Ok()) {
-		return !size_;
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return 0;
 	}
+	return !size_;
 } 
 
 void Stack::Clear () {
-	if (Ok()) {
-		if (!Empty()) {
-			while (size_) {
-				data_[--size_] = 0;
-			}
-		}
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return;
+	}
+	if (!Empty()) {
+		while (size_) {
+			data_[--size_] = 0;
+		}
 	}
 }
 
 int Stack::Size () {
-	if (Ok()) {
-		return size_;
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return 0;
 	}
+	return size_;
 }
 
 int Stack::Capacity () {
-	if (Ok()) {
-		return capacity_;
-	} else {
+	if (!Ok()) {
 		PrintError();
+		return 0;
 	}
+	return capacity_;
 }
 
 bool Stack::Ok () {
@@ -108,49 +113,58 @@ void Stack::Dump () {
 }
 
 size_t Stack::CheckErrors () {
-	if (Ok()) {
-		return 0;
-	} else {
+	if (!Ok()) {
 		if (size_>=capacity_) {
-			last_error_ = 1;
+			last_error_ = CONST_ERR_1;
 		} else if (this == NULL) {
-			last_error_ = 2;
+			last_error_ = CONST_ERR_2;
 		} else if (data_ == NULL) {
 			if (capacity_) {
-				last_error_ = 3;
+				last_error_ = CONST_ERR_3;
 			} else if (size_) {
-				last_error_ = 4;
+				last_error_ = CONST_ERR_4;
 			}
 		} else if (data_) {
 			if (capacity_ == 0) {
-				last_error_ = 5;
+				last_error_ = CONST_ERR_5;
 			}
 		} 
-	};
-	return 1;
+		return 1;
+	}
+	return 0;
 } 
 
 void Stack::PrintError() {
 	if  (CheckErrors()) {
-		if (last_error_ == 1) {
+		switch (last_error_) {
+		case 1:
 			printf("Error code: %d, size > capacity\n", last_error_);
-		} else if (last_error_ == 2) {
+			break;
+		case 2:
 			printf("Error code: %d, no stack\n", last_error_);
-		} else if (last_error_ == 3) {
+			break;
+		case 3:
 			printf("Error code: %d, wrong capacity\n", last_error_);
-		} else if (last_error_ == 4) {
+			break;
+		case 4:
 			printf("Error code: %d, wrong size\n", last_error_);
-		} else if (last_error_ == 5) {
+			break;
+		case 5:
 			printf("Error code: %d, stack with no capacity\n", last_error_);
+			break;
 		}
-	};
+	}
 	Dump();
 }
 
 int main()
 {
-	Stack s(1);
-	s.Push(1);
-	s.Push(2);
+	Stack s (15);
+	{
+		Stack s1 (s);
+		s1.PrintError();
+	}
+	s.Push (1.0);
+	s.Empty();
 	return 0;
 }
