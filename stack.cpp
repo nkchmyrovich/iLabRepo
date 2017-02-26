@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const size_t CONST_ERR_1 = 1;
-const size_t CONST_ERR_2 = 2;
-const size_t CONST_ERR_3 = 3;
-const size_t CONST_ERR_4 = 4;
-const size_t CONST_ERR_5 = 5; 
+const size_t CAPACITY_SIZE_ERR = 1;
+const size_t NO_STACK_ERR = 2;
+const size_t WR_CAPACITY_ERR = 3;
+const size_t WR_SIZE_ERR = 4;
+const size_t NO_CAPACITY_ERR = 5; 
 
 class Stack {
 private:
@@ -24,6 +24,7 @@ public:
 	void Dump();
 	void PrintError();
 	Stack(size_t size);
+	~Stack();
 	size_t CheckErrors();
 };
 
@@ -31,8 +32,15 @@ Stack::Stack (size_t size) :
 	data_ (new double [size]),
 	capacity_ (size),
 	size_ (0),
-	last_error_ (0),
+	last_error_ (0)
 	{}
+
+Stack::~Stack () {
+	delete data_;
+	size_ = NULL;
+	capacity_ = NULL;
+	last_error_ = NULL;
+}
 
 void Stack::Push (double value) {
 	if (!Ok()) {
@@ -115,18 +123,18 @@ void Stack::Dump () {
 size_t Stack::CheckErrors () {
 	if (!Ok()) {
 		if (size_>=capacity_) {
-			last_error_ = CONST_ERR_1;
+			last_error_ = CAPACITY_SIZE_ERR;
 		} else if (this == NULL) {
-			last_error_ = CONST_ERR_2;
+			last_error_ = NO_STACK_ERR;
 		} else if (data_ == NULL) {
 			if (capacity_) {
-				last_error_ = CONST_ERR_3;
+				last_error_ = WR_CAPACITY_ERR;
 			} else if (size_) {
-				last_error_ = CONST_ERR_4;
+				last_error_ = WR_SIZE_ERR;
 			}
 		} else if (data_) {
 			if (capacity_ == 0) {
-				last_error_ = CONST_ERR_5;
+				last_error_ = NO_CAPACITY_ERR;
 			}
 		} 
 		return 1;
@@ -159,12 +167,11 @@ void Stack::PrintError() {
 
 int main()
 {
-	Stack s (15);
-	{
-		Stack s1 (s);
-		s1.PrintError();
-	}
-	s.Push (1.0);
-	s.Empty();
-	return 0;
+Stack s (15); 
+{ 
+Stack s1 (s);
+s1.PrintError();
+} 
+s.Push (1.0);
+return 0;
 }
