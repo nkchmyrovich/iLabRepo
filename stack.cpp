@@ -24,6 +24,7 @@ public:
 	void Dump();
 	void PrintError();
 	Stack(size_t size);
+	Stack (const Stack& that);
 	~Stack();
 	size_t CheckErrors();
 };
@@ -31,6 +32,13 @@ public:
 Stack::Stack (size_t size) :
 	data_ (new double [size]),
 	capacity_ (size),
+	size_ (0),
+	last_error_ (0)
+	{}
+
+Stack::Stack (const Stack& that) :
+	data_ (new double [that.capacity_]),
+	capacity_ (that.capacity_),
 	size_ (0),
 	last_error_ (0)
 	{}
@@ -169,8 +177,7 @@ int main()
 {
 Stack s (15); 
 { 
-Stack s1 (s);
-s1.PrintError();
+Stack s1 (s); 
 } 
 s.Push (1.0);
 return 0;
