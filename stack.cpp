@@ -1,47 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-const size_t CAPACITY_SIZE_ERR = 1;
-const size_t NO_STACK_ERR = 2;
-const size_t WR_CAPACITY_ERR = 3;
-const size_t WR_SIZE_ERR = 4;
-const size_t NO_CAPACITY_ERR = 5; 
-
-class Stack {
-private:
-	double * data_;
-	size_t size_;
-	size_t capacity_;
-	size_t last_error_;
-public:
-	void Push (double value);
-	double Pop();
-	bool Empty();
-	void Clear();
-	int Size();
-	int Capacity();
-	bool Ok();
-	void Dump();
-	void PrintError();
-	Stack(size_t size);
-	Stack (const Stack& that);
-	~Stack();
-	size_t CheckErrors();
-};
-
 Stack::Stack (size_t size) :
 	data_ (new double [size]),
 	capacity_ (size),
 	size_ (0),
 	last_error_ (0)
 	{}
+	
 
-Stack::Stack (const Stack& that) :
+Stack::Stack (const Stack& that) try:
 	data_ (new double [that.capacity_]),
 	capacity_ (that.capacity_),
 	size_ (0),
 	last_error_ (0)
 	{}
+	catch (std::bad_alloc) {
+		data_ = NULL;
+		printf("Error data allocation\n");
+	}
 
 Stack::~Stack () {
 	delete data_;
@@ -49,6 +23,8 @@ Stack::~Stack () {
 	capacity_ = NULL;
 	last_error_ = NULL;
 }
+
+
 
 void Stack::Push (double value) {
 	if (!Ok()) {
@@ -171,14 +147,4 @@ void Stack::PrintError() {
 		}
 	}
 	Dump();
-}
-
-int main()
-{
-Stack s (15); 
-{ 
-Stack s1 (s); 
-} 
-s.Push (1.0);
-return 0;
 }
