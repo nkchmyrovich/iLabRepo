@@ -1,6 +1,6 @@
 #include "Stack.h"
 
-int main()
+int main()  
 {
 Stack s (15);
 {

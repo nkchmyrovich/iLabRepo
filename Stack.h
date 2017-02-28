@@ -31,4 +31,4 @@ public:
 	size_t CheckErrors();
 };
 
-#include "Stack.cpp"
+#include "Stack.cpp"  

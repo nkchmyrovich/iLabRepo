@@ -1,7 +1,7 @@
 Stack::Stack (size_t size) :
 	data_ (new double [size]),
 	capacity_ (size),
-	size_ (0),
+	size_ (0),  
 	last_error_ (0)
 	{}
 	
