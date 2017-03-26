@@ -3,43 +3,75 @@
 #include <vector>
 #include <string.h>
 
+const std::string cmds[10]= {"push", "pop", "out", "add", "int", "in", "jmp", "mul", "dec", "div"};
+const std::string registr[4]= {"ax", "bx", "cx", "dx"};
+const char _flag[10] = {'L', 'C', 'A', 'R', 'E', 'F'};
+
 enum CMD {
-	CMD_PUSH,
+	CMD_PUSH = 0,
 	CMD_POP,
 	CMD_OUT,
 	CMD_ADD,
 	CMD_INT,
-	CMD_IN
+	CMD_IN,
+	CMD_JMP,
+	CMD_MUL,
+	CMD_DEC,
+	CMD_DIV
 };
 
 enum REGISTR {
-	REG_AX,
+	REG_AX = 0,
 	REG_BX,
 	REG_CX,
 	REG_DX
 };
 
 enum FLAG {
-	LABEL,
+	LABEL = 0,
 	COMMAND,
 	ARGUMENT,
 	REG,
-	ERR
+	ERR,
+	FREE
 };
+
+class CommandFinal {
+public:
+	int cmd;
+	int arg;
+	int line;
+	char flag_arg;
+	CommandFinal();
+};
+
+CommandFinal::CommandFinal() :
+	cmd(-1),
+	arg(-1),
+	line(-1),
+	flag_arg('\0')
+	{}
+
+void CommandFinal_Dump (std::vector<CommandFinal> vec_cmd_f) {
+	for(size_t i = 0; i < vec_cmd_f.size(); i++) {
+		printf ("Command:%d Arg:%d Flag_arg:%c \n", vec_cmd_f[i].cmd, vec_cmd_f[i].arg, vec_cmd_f[i].flag_arg);
+	}
+}
+
 
 class Command {
 public:
-	size_t cmd;
-	size_t arg;
+	int cmd;
 	size_t line;
 	size_t tok_num;
+	std::string label_name;
 	char flag;
 	Command();
 };
 
 Command::Command () :
-	cmd(0),
-	arg(0),
+	label_name(),
+	cmd(-1),
 	line(0),
 	tok_num(0),
 	flag('\0')
@@ -62,10 +94,11 @@ public:
 };
 
 Token::Token (size_t size) : 
-	str (new char [size]),
+	str (),
 	line (-1), 
 	tok_num(0)
 	{}
+
 
 void Token_Dump (std::vector<Token> vec_tok) {
 	size_t i;
@@ -77,39 +110,29 @@ void Token_Dump (std::vector<Token> vec_tok) {
 void Command_Dump (std::vector<Command> vec_cmd) {
 	size_t i = 0;
 	for (i = 0; i < vec_cmd.size(); i++) {
-		printf("command:%d   arg:%d  line:%d   token num:%d   flag:%c  \n", vec_cmd[i].cmd, vec_cmd[i].arg, vec_cmd[i].line, vec_cmd[i].tok_num, vec_cmd[i].flag);
+		if (vec_cmd[i].tok_num == 0) { break;}
+		printf("command:%d     line:%d   token num:%d   flag:%c  labelname:%s\n", vec_cmd[i].cmd, vec_cmd[i].line, vec_cmd[i].tok_num, vec_cmd[i].flag, vec_cmd[i].label_name.c_str());
 	}
 }
 
 class Label {
 public:
-	size_t label_name;
+	std::string label_name;
 	size_t cmd_num;
 	int line;
 	Label(size_t start);
 };
 
 Label::Label (size_t start) :
-	label_name(0),
+	label_name (),
 	cmd_num(0),
 	line(-1)
 	{}
 
-int Label_name(char* str) {
-	size_t i = 0;
-	bool label_true = true;
-	for (i = 0; i < (sizeof(str)/sizeof(char)); i++) {
-		if (isdigit(str[i])) {
-			label_true = true;
-		} else {
-			label_true = false;
-			break;
-		}
-	}
-	if (label_true) {
-		return atoi(str);
-	} else {
-		return -1;
+void Label_Dump (std::vector<Label> vec_label) {
+	for (size_t i = 0; i < vec_label.size() + 1; i++) {
+		if (vec_label[i].line == -1) { break;}
+		printf("label name:%s cmd_num:%d label_num:%d \n", vec_label[i].label_name.c_str(), vec_label[i].cmd_num, i);
 	}
 }
 
@@ -120,7 +143,32 @@ bool Arg_Ok (std::string str) {
 	return str.find_first_not_of("0123456789", offset) == std::string::npos;
 }
 
-std::vector<Token> read_file (std::vector<Label> vec_label) {
+size_t Label_name (std::string str, std::vector<Label> vec_label) {
+	bool ok = false;
+	for (size_t i = 0; i < vec_label.size(); i++) {
+		if (!str.compare(vec_label[i].label_name)) {
+			return i;
+			ok = true;
+		}
+	}
+	if(!ok) {
+		return -1;
+	}
+}
+
+std::string _label_name (std::string str) {
+	str.erase(str.size()-1, 1);
+	return str;
+}
+
+std::string _label_name_1 (std::string str) {
+	str.erase(0, 1);
+	return str;
+}
+
+void free_agr_cmd (std::vector<CommandFinal>& vec_cmd_f, std::vector<Command>& vec_cmd, size_t* i, size_t* j);
+
+void assembler () {
 	FILE* file = fopen("prog.txt", "r");
 	FILE* file_out = fopen("output.txt", "w");
   	 if (file == NULL) {
@@ -138,9 +186,9 @@ std::vector<Token> read_file (std::vector<Label> vec_label) {
 		iter1 = std::find(iter1, fileVec.end(), ';');
 		iter2 = std::find(iter1, fileVec.end(), '\n');
 		fileVec.erase(iter1, iter2);
-		
 	};
-	vec_label.reserve(fileSize);
+	Label _label(0);
+	std::vector<Label> vec_label(fileSize, 0);
 	std::vector<Token> vec_tok(fileSize, Token(fileSize));
 	std::string str();
 	char buf[fileSize];
@@ -161,18 +209,21 @@ std::vector<Token> read_file (std::vector<Label> vec_label) {
 				l++;
 			}
 			_tok_num++;
-			if ((buf[i-1] == ':')||(buf[0] == ':')) {
+			if (buf[i-1] == ':') {
 				vec_label[label_num].cmd_num = _tok_num;
-				vec_label[label_num].label_name = Label_name(buf);
+				vec_label[label_num].label_name = _label_name((std::string)buf);
 				vec_label[label_num].line = line;
 				label_num++;
-			} 
-			_token.str = buf;
-			_token.line = line;
-			_token.tok_num = _tok_num;
-			vec_tok[k] = _token;
-			memset(buf, '\0', fileSize + 2);
-			k++;
+				memset(buf, '\0', fileSize + 2);
+			} else { 
+				_token.str = buf;
+				_token.line = line;
+				_token.tok_num = _tok_num;
+				vec_tok[k] = _token;
+				memset(buf, '\0', fileSize + 2);
+				k++;
+			
+			}
 			
 		}
 		if (fileVec[l] == '\n') {
@@ -180,93 +231,95 @@ std::vector<Token> read_file (std::vector<Label> vec_label) {
 		}
 		l++;
 	}
-	/*Token_Dump(vec_tok);
-	printf ("%d  ", vec_label[1].label_name);*/
-	return vec_tok;
-}
-
-void asm_compiler () {
-	const std::string cmds[6]= {"push", "pop", "out", "add", "int", "in"};
- 	const std::string registr[4]= {"ax", "bx", "cx", "dx"};
-	const char _flag[10] = {'L', 'C', 'A', 'R', 'E'};
-	Label _label(0);
-	std::vector<Label> vec_label(12, 0); 
-	std::vector<Token> vec_tok = read_file(vec_label);
-	std::vector<Command> vec_cmd(vec_tok.size() + vec_label.size());
-	size_t i = 0;
-	size_t k = 0;
-	for (i = 0; i < vec_label.size(); i++) {
-		vec_cmd[i].flag = _flag[LABEL];
-		vec_cmd[i].cmd = vec_label[i].label_name;
-		vec_cmd[i].tok_num = vec_label[i].cmd_num;
-		vec_cmd[i].line = vec_label[i].line;
-		k = i;
-	}
-	i = k;
-	std::string str;
-	size_t j = k + 1;
+	/*Token_Dump(vec_tok);*/
+	/*Compiling*/
+	std::vector<Command> vec_cmd(vec_tok.size());
 	i = 0;
-	while(j < vec_cmd.size()) {
-		str = vec_tok[i].str;
-		if (!str.compare(cmds[CMD_PUSH])) {
+	std::string _str;
+	size_t j = 0;
+	while(j < vec_tok.size()) {
+		if (vec_tok[i].line == -1) { break;};
+		_str = vec_tok[i].str;
+		if (!_str.compare(cmds[CMD_PUSH])) {
 			vec_cmd[j].flag = _flag[COMMAND];
 			vec_cmd[j].cmd = CMD_PUSH;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(cmds[CMD_POP])) {
+		} else if (!_str.compare(cmds[CMD_POP])) {
 			vec_cmd[j].flag = _flag[COMMAND];
 			vec_cmd[j].cmd = CMD_POP;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(cmds[CMD_OUT])) {
+		} else if (!_str.compare(cmds[CMD_DEC])) {
+			vec_cmd[j].flag = _flag[COMMAND];
+			vec_cmd[j].cmd = CMD_DEC;
+			vec_cmd[j].tok_num = vec_tok[i].tok_num;
+			vec_cmd[j].line = vec_tok[i].line;
+		} else if (!_str.compare(cmds[CMD_DIV])) {
+			vec_cmd[j].flag = _flag[COMMAND];
+			vec_cmd[j].cmd = CMD_DIV;
+			vec_cmd[j].tok_num = vec_tok[i].tok_num;
+			vec_cmd[j].line = vec_tok[i].line;
+		} else if (!_str.compare(cmds[CMD_MUL])) {
+			vec_cmd[j].flag = _flag[COMMAND];
+			vec_cmd[j].cmd = CMD_MUL;
+			vec_cmd[j].tok_num = vec_tok[i].tok_num;
+			vec_cmd[j].line = vec_tok[i].line;
+		} else if (!_str.compare(cmds[CMD_OUT])) {
 			vec_cmd[j].flag = _flag[COMMAND];
 			vec_cmd[j].cmd = CMD_OUT;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(cmds[CMD_INT])) {
+		} else if (!_str.compare(cmds[CMD_INT])) {
 			vec_cmd[j].flag = _flag[COMMAND];
 			vec_cmd[j].cmd = CMD_INT;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(cmds[CMD_IN])) {
+		} else if (!_str.compare(cmds[CMD_IN])) {
 			vec_cmd[j].flag = _flag[COMMAND];
-			vec_cmd[j].cmd = CMD_INT;
+			vec_cmd[j].cmd = CMD_IN;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(cmds[CMD_ADD])) {
+		} else if (!_str.compare(cmds[CMD_ADD])) {
 			vec_cmd[j].flag = _flag[COMMAND];
 			vec_cmd[j].cmd = CMD_ADD;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(registr[REG_AX])) {
+		} else if (!_str.compare(cmds[CMD_JMP])) {
+			vec_cmd[j].flag = _flag[COMMAND];
+			vec_cmd[j].cmd = CMD_JMP;
+			vec_cmd[j].tok_num = vec_tok[i].tok_num;
+			vec_cmd[j].line = vec_tok[i].line;
+		} else if (!_str.compare(registr[REG_AX])) {
 			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_AX;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(registr[REG_BX])) {
+		} else if (!_str.compare(registr[REG_BX])) {
 			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_BX;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(registr[REG_CX])) {
+		} else if (!_str.compare(registr[REG_CX])) {
 			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_CX;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (!str.compare(registr[REG_DX])) {
+		} else if (!_str.compare(registr[REG_DX])) {
 			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_DX;
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if (Arg_Ok(str)) {
+		} else if (Arg_Ok(_str)) {
 			vec_cmd[j].flag = _flag[ARGUMENT];
-			vec_cmd[j].cmd = std::stoi(str);
+			vec_cmd[j].cmd = atoi(_str.c_str());
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
-		} else if ((str[str.size() - 1] = ':')||(str[0] = ':')) { 
+		} else if (_str[0] == ':') { 
 			vec_cmd[j].flag = _flag[LABEL];
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
 			vec_cmd[j].line = vec_tok[i].line;
+			vec_cmd[j].label_name = _label_name_1(_str);
 		} else {
 			vec_cmd[j].flag = _flag[ERR];
 			vec_cmd[j].tok_num = vec_tok[i].tok_num;
@@ -275,7 +328,146 @@ void asm_compiler () {
 		j++;
 		i++;
 	}
-	std::sort (vec_cmd.begin(), vec_cmd.end(), CustomSort_line());
-	Command_Dump(vec_cmd);
-	printf("%d", k);
-} 
+	/*std::sort (vec_cmd.begin(), vec_cmd.end(), CustomSort_line());*/
+	/*Command_Dump(vec_cmd);*/
+	/*Semantic analys*/
+	std::vector<CommandFinal> vec_cmd_f (vec_cmd.size());
+	j = 0;
+	for (i = 0; i < vec_cmd.size(); i++) {
+		if (vec_cmd[i].tok_num) {
+			if(vec_cmd[i].flag == _flag[COMMAND]) {
+					if (vec_cmd[i].cmd == CMD_ADD) {
+						free_agr_cmd (vec_cmd_f, vec_cmd, &i, &j);
+						j++;
+					} else if (vec_cmd[i].cmd == CMD_IN) {
+						free_agr_cmd (vec_cmd_f, vec_cmd, &i, &j);
+						j++;
+					} else if (vec_cmd[i].cmd == CMD_INT) {
+						free_agr_cmd (vec_cmd_f, vec_cmd, &i, &j);
+						j++;
+					} else if (vec_cmd[i].cmd == CMD_JMP) {
+						if (vec_cmd[i+1].flag == _flag[LABEL]) {
+							if (Label_name (vec_cmd[i+1].label_name, vec_label) == -1) {
+								vec_cmd_f[j].flag_arg = _flag[ERR];
+								vec_cmd_f[j].line = vec_cmd[i].line;
+							} else {
+								vec_cmd_f[j].cmd = vec_cmd[i].cmd;
+								vec_cmd_f[j].arg = Label_name (vec_cmd[i+1].label_name, vec_label);
+								vec_cmd_f[j].line = vec_cmd[i].line;
+								vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
+								i++;
+								j++;
+							}
+						} else {
+							vec_cmd_f[j].flag_arg = _flag[ERR];
+							vec_cmd_f[j].line = vec_cmd[i].line;
+						}
+					} else if (vec_cmd[i].cmd == CMD_OUT) {
+						free_agr_cmd (vec_cmd_f, vec_cmd, &i, &j);
+						j++;
+					} else if (vec_cmd[i].cmd == CMD_POP) {
+						if (vec_cmd[i+1].flag == _flag[ARGUMENT]) {
+							vec_cmd_f[j].cmd = vec_cmd[i].cmd;
+							vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
+							i++;
+							j++;
+						} else if (vec_cmd[i+1].flag == _flag[REG]) {
+							vec_cmd_f[j].cmd = vec_cmd[i].cmd;
+							vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
+							i++;
+							j++;
+						} else {
+							vec_cmd_f[j].flag_arg = _flag[ERR];
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							j++;
+						}
+					} else if (vec_cmd[i].cmd == CMD_PUSH) {
+						if (vec_cmd[i+1].flag == _flag[ARGUMENT]) {
+							vec_cmd_f[j].cmd = vec_cmd[i].cmd;
+							vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
+							i++;
+							j++;
+						} else if (vec_cmd[i+1].flag == _flag[REG]) {
+							vec_cmd_f[j].cmd = vec_cmd[i].cmd;
+							vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
+							i++;
+							j++;
+						} else {
+							vec_cmd_f[j].flag_arg = _flag[ERR];
+							vec_cmd_f[j].line = vec_cmd[i].line;
+							j++;
+						}
+					}
+			} else if (vec_cmd[i].flag == _flag[REG]) {
+					vec_cmd_f[j].flag_arg = _flag[ERR];
+					vec_cmd_f[j].line = vec_cmd[i].line;
+					j++;
+			} else if (vec_cmd[i].flag == _flag[LABEL]) {
+					vec_cmd_f[j].flag_arg = _flag[ERR];
+					vec_cmd_f[j].line = vec_cmd[i].line;
+					j++;
+			} else if (vec_cmd[i].flag == _flag[ERR]) {
+					vec_cmd_f[j].flag_arg = _flag[ERR];
+					vec_cmd_f[j].line = vec_cmd[i].line;
+					j++;
+			}else if (vec_cmd[i].flag == _flag[ARGUMENT]) {
+					vec_cmd_f[j].flag_arg = _flag[ERR];
+					vec_cmd_f[j].line = vec_cmd[i].line;
+					j++;
+			} else { 
+					vec_cmd_f[j].flag_arg = _flag[ERR];
+					vec_cmd_f[j].line = vec_cmd[i].line;
+					j++;
+			}
+		} 
+	}
+	/*CommandFinal_Dump(vec_cmd_f);*/
+	/*Label_Dump(vec_label);*/
+	/*File out*/
+	size_t cmd_size = 0;
+	bool not_err = true;
+	for (i = 0; i < vec_cmd_f.size(); i++) {
+		if (vec_cmd_f[i].line == -1) { break;}
+		if (vec_cmd_f[i].flag_arg == _flag[ERR]) {
+			not_err = false;
+			fprintf(file_out, "%c %d \n", vec_cmd_f[i].flag_arg, vec_cmd_f[i].line);
+		}
+		cmd_size++;
+	}
+	if (not_err) {
+		fprintf(file_out, "%d \n",cmd_size);
+		for (i = 0; i < vec_cmd_f.size(); i++) {
+			if (vec_cmd_f[i].line == -1) { break;}
+			fprintf(file_out, "%d %d %c \n", vec_cmd_f[i].cmd, vec_cmd_f[i].arg, vec_cmd_f[i].flag_arg);
+		}
+		fprintf(file_out, "%d \n", label_num);
+		if (vec_label.size()) {
+			for(i = 0; i < vec_label.size(); i++) {
+				if (vec_label[i].line == -1) { break;}
+				fprintf(file_out, "%d ", vec_label[i].cmd_num + 1);
+			}
+		}
+	}
+	fclose(file);
+	fclose(file_out);
+}
+
+void free_agr_cmd (std::vector<CommandFinal>& vec_cmd_f, std::vector<Command>& vec_cmd, size_t* i, size_t* j) {
+	if ((vec_cmd[*i+1].flag == _flag[ARGUMENT])||(vec_cmd[*i+1].flag == _flag[REG])) {
+		vec_cmd_f[*j].flag_arg = _flag[ERR];
+		vec_cmd_f[*j].line = vec_cmd[*i].line;
+	} else {
+		vec_cmd_f[*j].cmd = vec_cmd[*i].cmd;
+		vec_cmd_f[*j].arg = 0;
+		vec_cmd_f[*j].flag_arg = _flag[FREE];
+		vec_cmd_f[*j].line = vec_cmd[*i].line;
+	}
+}
