@@ -153,7 +153,9 @@ void CPU::Main_loop() {
 				case CMD_ADD :
 					if (Arg_Ok(_RAM[CurrCmd].arg)) {
 						if (flag_cmp(_RAM[CurrCmd].flag, _flag[FREE])) {
-							
+							a = _Stack.Pop();
+							b = _Stack.Pop();
+							_Stack.Push(a + b);
 						} else {
 							
 						}

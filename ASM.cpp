@@ -268,6 +268,16 @@ void ASM::Read_file() {
 	/*Token_Dump(vec_tok);*/
 }
 
+#define Command_Compilation 
+cmd_compilation(vec_cmd, vec_tok, &i, &j);\
+vec_cmd[j].cmd_num = cmd_num;\
+cmd_num++;
+
+#define Reg_Compilation 
+vec_cmd[j].flag = _flag[REG];\
+vec_cmd[j].tok_num = vec_tok[i].tok_num;\
+vec_cmd[j].line = vec_tok[i].line;
+
 void ASM::Compiling() {
 	size_t i = 0;
 	std::string _str;
@@ -278,94 +288,58 @@ void ASM::Compiling() {
 		_str = vec_tok[i].str;
 		if (!_str.compare(cmds[CMD_PUSH])) {
 			vec_cmd[j].cmd = CMD_PUSH;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_POP])) {
 			vec_cmd[j].cmd = CMD_POP;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_DEC])) {
 			vec_cmd[j].cmd = CMD_DEC;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_DIV])) {
 			vec_cmd[j].cmd = CMD_DIV;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_MUL])) {
 			vec_cmd[j].cmd = CMD_MUL;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_OUT])) {
 			vec_cmd[j].cmd = CMD_OUT;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_INT])) {
 			vec_cmd[j].cmd = CMD_INT;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_IN])) {
 			vec_cmd[j].cmd = CMD_IN;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_ADD])) {
 			vec_cmd[j].cmd = CMD_ADD;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_JA])) {
 			vec_cmd[j].cmd = CMD_JA;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_JE])) {
 			vec_cmd[j].cmd = CMD_JE;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_CALL])) {
 			vec_cmd[j].cmd = CMD_CALL;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_RET])) {
 			vec_cmd[j].cmd = CMD_RET;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(cmds[CMD_JMP])) { 
 			vec_cmd[j].cmd = CMD_JMP;
-			cmd_compilation(vec_cmd, vec_tok, &i, &j);
-			vec_cmd[j].cmd_num = cmd_num;
-			cmd_num++;
+			Command_Compilation;
 		} else if (!_str.compare(registr[REG_AX])) {
-			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_AX;
-			vec_cmd[j].tok_num = vec_tok[i].tok_num;
-			vec_cmd[j].line = vec_tok[i].line;
+			Reg_Compilation;
 		} else if (!_str.compare(registr[REG_BX])) {
-			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_BX;
-			vec_cmd[j].tok_num = vec_tok[i].tok_num;
-			vec_cmd[j].line = vec_tok[i].line;
+			Reg_Compilation;
 		} else if (!_str.compare(registr[REG_CX])) {
-			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_CX;
-			vec_cmd[j].tok_num = vec_tok[i].tok_num;
-			vec_cmd[j].line = vec_tok[i].line;
+			Reg_Compilation;
 		} else if (!_str.compare(registr[REG_DX])) {
-			vec_cmd[j].flag = _flag[REG];
 			vec_cmd[j].cmd = REG_DX;
-			vec_cmd[j].tok_num = vec_tok[i].tok_num;
-			vec_cmd[j].line = vec_tok[i].line;
+			Reg_Compilation;
 		} else if (Arg_Ok(_str)) {
 			vec_cmd[j].flag = _flag[ARGUMENT];
 			vec_cmd[j].cmd = atoi(_str.c_str());
@@ -387,6 +361,14 @@ void ASM::Compiling() {
 	/*std::sort (vec_cmd.begin(), vec_cmd.end(), CustomSort_line());*/
 	Command_Dump(vec_cmd);
 }
+
+#undef Command_Compilation
+#undef Reg_Compilation
+
+#define Err_Semantic 
+vec_cmd_f[j].flag_arg = _flag[ERR];\
+vec_cmd_f[j].line = vec_cmd[i].line;\
+j++;
 
 void ASM::Semantic_analysis () {
 	size_t j = 0;
@@ -425,24 +407,18 @@ void ASM::Semantic_analysis () {
 							j++;
 							break;
 						case CMD_POP : 
-							if (vec_cmd[i+1].flag == _flag[ARGUMENT]) {
+							if (vec_cmd[i+1].flag == _flag[REG]) {
 								vec_cmd_f[j].cmd = vec_cmd[i].cmd;
 								vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
 								vec_cmd_f[j].line = vec_cmd[i].line;
 								vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
 								i++;
 								j++;
-							} else if (vec_cmd[i+1].flag == _flag[REG]) {
-								vec_cmd_f[j].cmd = vec_cmd[i].cmd;
-								vec_cmd_f[j].arg = vec_cmd[i+1].cmd;
-								vec_cmd_f[j].line = vec_cmd[i].line;
-								vec_cmd_f[j].flag_arg = vec_cmd[i+1].flag;
-								i++;
+							} else if (vec_cmd[i+1].flag == _flag[COMMAND]) {
+								free_agr_cmd(vec_cmd_f, vec_cmd, &i, &j);
 								j++;
 							} else {
-								vec_cmd_f[j].flag_arg = _flag[ERR];
-								vec_cmd_f[j].line = vec_cmd[i].line;
-								j++;
+								Err_Semantic;
 							}
 							break;
 						case CMD_PUSH :
@@ -461,9 +437,7 @@ void ASM::Semantic_analysis () {
 								i++;
 								j++;
 							} else {
-								vec_cmd_f[j].flag_arg = _flag[ERR];
-								vec_cmd_f[j].line = vec_cmd[i].line;
-								j++;
+								Err_Semantic;
 							}
 							break;
 						case CMD_JA :
@@ -482,30 +456,20 @@ void ASM::Semantic_analysis () {
 							break;
 					}
 			} else if (vec_cmd[i].flag == _flag[REG]) {
-					vec_cmd_f[j].flag_arg = _flag[ERR];
-					vec_cmd_f[j].line = vec_cmd[i].line;
-					j++;
+					Err_Semantic;
 			} else if (vec_cmd[i].flag == _flag[LABEL]) {
-					vec_cmd_f[j].flag_arg = _flag[ERR];
-					vec_cmd_f[j].line = vec_cmd[i].line;
-					j++;
+					Err_Semantic;
 			} else if (vec_cmd[i].flag == _flag[ERR]) {
-					vec_cmd_f[j].flag_arg = _flag[ERR];
-					vec_cmd_f[j].line = vec_cmd[i].line;
-					j++;
+					Err_Semantic;
 			}else if (vec_cmd[i].flag == _flag[ARGUMENT]) {
-					vec_cmd_f[j].flag_arg = _flag[ERR];
-					vec_cmd_f[j].line = vec_cmd[i].line;
-					j++;
+					Err_Semantic;
 			} else { 
-					vec_cmd_f[j].flag_arg = _flag[ERR];
-					vec_cmd_f[j].line = vec_cmd[i].line;
-					j++;
+					Err_Semantic;
 			}
 		} 
 	}
-	CommandFinal_Dump(vec_cmd_f);
-	Label_Dump(vec_label);
+	/*CommandFinal_Dump(vec_cmd_f);
+	Label_Dump(vec_label);*/
 }
 
 void ASM::File_out() {
